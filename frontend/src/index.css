@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand-primary: #3b82f6; /* Blue-500 */
+  --color-brand-secondary: #6366f1; /* Indigo-500 */
+  --color-surface-bg: #0f172a; /* Slate-900 */
+  --color-surface-card: #1e293b; /* Slate-800 */
+  --color-surface-border: #334155; /* Slate-700 */
+  --color-text-primary: #f8fafc; /* Slate-50 */
+  --color-text-secondary: #94a3b8; /* Slate-400 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Card base */
+.card {
+  @apply bg-slate-800 border border-slate-700 rounded-xl p-6 transition-all duration-300 shadow-sm;
+}
+.card:hover {
+  @apply border-blue-500/30 shadow-md shadow-blue-500/5;
+}
+
+/* Professional Gradients */
+.gradient-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.gradient-header {
+  background: linear-gradient(to right, #1e293b, #0f172a);
+  border-bottom: 1px solid #334155;
+}
+
+/* Badge variants */
+.badge {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider;
+}
+.badge-critical {
+  @apply bg-rose-500/10 text-rose-400 border border-rose-500/20;
+}
+.badge-high {
+  @apply bg-orange-500/10 text-orange-400 border border-orange-500/20;
+}
+.badge-medium {
+  @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
+}
+.badge-low {
+  @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+}
+.badge-info {
+  @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
+}
+
+/* Graph node styling */
+.graph-node {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.graph-node:hover {
+  filter: brightness(1.2);
+  stroke: #60a5fa;
+  stroke-width: 2px;
+}
+
+/* Input Fields */
+input, select, textarea {
+  @apply bg-slate-900 border border-slate-700 text-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-lg shadow-blue-500/20;
+}
+.btn-secondary {
+  @apply bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2 px-4 rounded-lg transition-colors border border-slate-600;
+}
