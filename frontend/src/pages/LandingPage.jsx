@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import { ShieldAlert, Activity, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TypeAnimation } from 'react-type-animation';
 
 export default function LandingPage() {
     return (
@@ -13,7 +14,7 @@ export default function LandingPage() {
                     loop
                     muted
                     playsInline
-                    className="object-cover w-full h-full opacity-40 mix-blend-screen"
+                    className="object-cover w-full h-full opacity-100000000 mix-blend-screen"
                 >
                     <source src="https://res.cloudinary.com/dzxuomajo/video/upload/v1771603012/142363-780562112_medium_mavpk6.mp4" type="video/mp4" />
                 </video>
@@ -34,11 +35,21 @@ export default function LandingPage() {
                         System Online
                     </div>
 
-                    <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-8 drop-shadow-lg">
-                        Secure Your Infrastructure with <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
-                            SentinelX
-                        </span>
+                    <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-8 drop-shadow-lg h-[150px] md:h-[180px]">
+                        <TypeAnimation
+                            sequence={[
+                                'Secure Your Infrastructure with SentinelX',
+                                1000,
+                                'Secure Your Infrastructure with Confidence',
+                                1000,
+                                'Secure Your Infrastructure with Intelligence',
+                                1000,
+                            ]}
+                            wrapper="span"
+                            speed={10}
+                            repeat={Infinity}
+                            className="inline-block"
+                        />
                     </h1>
 
                     <p className="text-xl text-slate-200 mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
