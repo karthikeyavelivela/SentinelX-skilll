@@ -21,10 +21,24 @@ export default function RemediationPage() {
     const [stats, setStats] = useState({});
     const [filter, setFilter] = useState('all');
 
-    useEffect(() => {
-        api.get('/remediation/jobs').then(r => setJobs(r.data)).catch(() => setJobs([])).finally(() => setLoading(false));
+    const fetchData = () => {
+        api.get('/remediation/jobs').then(r => setJobs(r.data)).catch(() => setJobs([]));
         api.get('/remediation/stats').then(r => setStats(r.data)).catch(() => setStats({}));
+    };
+
+    useEffect(() => {
+        fetchData();
+        setLoading(false);
+        const interval = setInterval(fetchData, 5000); // Poll every 5s for live updates
+        return () => clearInterval(interval);
     }, []);
+
+    const handleAction = (e, id, action, body = {}) => {
+        e.stopPropagation();
+        api.post(`/remediation/jobs/${id}/${action}`, body)
+            .then(() => fetchData())
+            .catch(console.error);
+    };
 
     const display = (jobs).filter(j => filter === 'all' || j.status === filter);
 
@@ -66,56 +80,65 @@ export default function RemediationPage() {
 
                 {/* Pipeline */}
                 <div className="space-y-3">
+                    {display.length === 0 && !loading && (
+                        <div className="text-center py-12 text-gray-500 card">
+                            No remediation jobs found for this filter.
+                        </div>
+                    )}
                     {display.map(job => {
                         const sc = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending_approval;
                         const Icon = sc.icon;
                         return (
-                            <div key={job.id} className={`card flex items-center gap-4 cursor-pointer hover:border-brand-500/40 ${sc.bg} border ${sc.border}`}>
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${sc.bg}`}>
-                                    <Icon className={`w-6 h-6 ${sc.color}`} />
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-sm font-semibold text-white">{job.asset_hostname || `Asset #${job.asset_id}`}</span>
-                                        <span className="font-mono text-xs text-brand-400">{job.cve_id}</span>
-                                        {job.is_dry_run && <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">DRY RUN</span>}
+                            <div key={job.id} className={`card flex items-center justify-between p-4 cursor-pointer hover:border-blue-500/40 ${sc.bg} border ${sc.border} rounded-xl transition-all`}>
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${sc.bg}`}>
+                                        <Icon className={`w-6 h-6 ${sc.color} ${job.status === 'in_progress' ? 'animate-pulse' : ''}`} />
                                     </div>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                                        <span>📦 {job.package_name}</span>
-                                        <span>⏰ {new Date(job.created_at).toLocaleString()}</span>
-                                        {job.scheduled_at && <span>📅 Scheduled: {new Date(job.scheduled_at).toLocaleString()}</span>}
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-sm font-semibold text-white">{job.asset_hostname || `Asset #${job.asset_id}`}</span>
+                                            <span className="font-mono text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">{job.cve_id}</span>
+                                            {job.is_dry_run && <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">DRY RUN</span>}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-slate-400">
+                                            <span>📦 {job.package_name}</span>
+                                            <span>⏰ {new Date(job.created_at).toLocaleString()}</span>
+                                            {job.scheduled_at && <span>📅 Scheduled: {new Date(job.scheduled_at).toLocaleString()}</span>}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <span className={`badge ${job.risk_level === 'critical' ? 'badge-critical' : job.risk_level === 'high' ? 'badge-high' : 'badge-medium'}`}>
-                                    {job.risk_level}
-                                </span>
+                                <div className="flex items-center gap-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${job.risk_level === 'critical' ? 'bg-rose-500/20 text-rose-400' : job.risk_level === 'high' ? 'bg-orange-500/20 text-orange-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                        {(job.risk_level || 'UNKNOWN').toUpperCase()}
+                                    </span>
 
-                                <div className={`px-3 py-1 rounded-lg text-xs font-medium ${sc.bg} ${sc.color} border ${sc.border}`}>
-                                    {sc.label}
-                                </div>
+                                    <div className={`px-3 py-1 rounded-lg text-xs font-medium ${sc.bg} ${sc.color} border ${sc.border}`}>
+                                        {sc.label}
+                                    </div>
 
-                                {/* Quick actions */}
-                                <div className="flex gap-1">
-                                    {job.status === 'pending_approval' && (
-                                        <button onClick={() => api.post(`/remediation/jobs/${job.id}/approve`, { approved: true }).catch(() => { })}
-                                            className="p-2 rounded-lg hover:bg-green-500/20 text-green-400 transition-colors" title="Approve">
-                                            <CheckCircle className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                    {(job.status === 'approved' || job.status === 'scheduled') && (
-                                        <button onClick={() => api.post(`/remediation/jobs/${job.id}/execute`).catch(() => { })}
-                                            className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-400 transition-colors" title="Execute">
-                                            <Play className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                    {job.status === 'completed' && (
-                                        <button onClick={() => api.post(`/remediation/jobs/${job.id}/rollback`).catch(() => { })}
-                                            className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-400 transition-colors" title="Rollback">
-                                            <RotateCcw className="w-4 h-4" />
-                                        </button>
-                                    )}
+                                    {/* Quick actions */}
+                                    <div className="flex gap-1 ml-4 border-l border-slate-700 pl-4">
+                                        {job.status === 'pending_approval' && (
+                                            <button onClick={(e) => handleAction(e, job.id, 'approve', { approved: true })}
+                                                className="p-2 rounded-lg hover:bg-green-500/20 text-emerald-400 transition-colors" title="Approve">
+                                                <CheckCircle className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        {(job.status === 'approved' || job.status === 'scheduled') && (
+                                            <button onClick={(e) => handleAction(e, job.id, 'execute')}
+                                                className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-400 transition-colors" title="Execute">
+                                                <Play className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        {job.status === 'completed' && (
+                                            <button onClick={(e) => handleAction(e, job.id, 'rollback')}
+                                                className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-400 transition-colors" title="Rollback">
+                                                <RotateCcw className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );

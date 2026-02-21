@@ -2,14 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .animate-scan-line {
+    animation: scan 3s linear infinite;
+  }
+
+  .slant-bg {
+    clip-path: polygon(0 0, 100% 0, 100% 60%, 0% 100%);
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(24, 24, 27, 0.5);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.5);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.8);
+}
+
 :root {
-  --color-brand-primary: #3b82f6; /* Blue-500 */
-  --color-brand-secondary: #6366f1; /* Indigo-500 */
-  --color-surface-bg: #0f172a; /* Slate-900 */
-  --color-surface-card: #1e293b; /* Slate-800 */
-  --color-surface-border: #334155; /* Slate-700 */
-  --color-text-primary: #f8fafc; /* Slate-50 */
-  --color-text-secondary: #94a3b8; /* Slate-400 */
+  --color-brand-primary: #3b82f6;
+  /* Blue-500 */
+  --color-brand-secondary: #6366f1;
+  /* Indigo-500 */
+  --color-surface-bg: #0f172a;
+  /* Slate-900 */
+  --color-surface-card: #1e293b;
+  /* Slate-800 */
+  --color-surface-border: #334155;
+  /* Slate-700 */
+  --color-text-primary: #f8fafc;
+  /* Slate-50 */
+  --color-text-secondary: #94a3b8;
+  /* Slate-400 */
 }
 
 * {
@@ -30,13 +94,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--color-surface-card);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--color-surface-border);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
@@ -45,6 +112,7 @@ body {
 .card {
   @apply bg-slate-800 border border-slate-700 rounded-xl p-6 transition-all duration-300 shadow-sm;
 }
+
 .card:hover {
   @apply border-blue-500/30 shadow-md shadow-blue-500/5;
 }
@@ -63,18 +131,23 @@ body {
 .badge {
   @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider;
 }
+
 .badge-critical {
   @apply bg-rose-500/10 text-rose-400 border border-rose-500/20;
 }
+
 .badge-high {
   @apply bg-orange-500/10 text-orange-400 border border-orange-500/20;
 }
+
 .badge-medium {
   @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
 }
+
 .badge-low {
   @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
 }
+
 .badge-info {
   @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
 }
@@ -84,6 +157,7 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .graph-node:hover {
   filter: brightness(1.2);
   stroke: #60a5fa;
@@ -91,7 +165,9 @@ body {
 }
 
 /* Input Fields */
-input, select, textarea {
+input,
+select,
+textarea {
   @apply bg-slate-900 border border-slate-700 text-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all;
 }
 
@@ -99,6 +175,7 @@ input, select, textarea {
 .btn-primary {
   @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-lg shadow-blue-500/20;
 }
+
 .btn-secondary {
   @apply bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2 px-4 rounded-lg transition-colors border border-slate-600;
 }

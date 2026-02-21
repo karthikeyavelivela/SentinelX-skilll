@@ -10,6 +10,10 @@ import MLPage from './pages/MLPage';
 import GraphPage from './pages/GraphPage';
 import RiskPage from './pages/RiskPage';
 import RemediationPage from './pages/RemediationPage';
+import LandingPage from './pages/LandingPage';
+import AboutPage from './pages/AboutPage';
+import TeamPage from './pages/TeamPage';
+import AgentScanPage from './pages/AgentScanPage';
 
 function ProtectedLayout() {
     const { user } = useAuth();
@@ -25,9 +29,16 @@ function ProtectedLayout() {
     );
 }
 
+function ProtectedScanRoute({ children }) {
+    const { user } = useAuth();
+    if (!user) return <Navigate to="/login" replace />;
+    return children;
+}
+
 function PublicRoute({ children }) {
     const { user } = useAuth();
-    if (user) return <Navigate to="/" replace />;
+    // If logged in, go to scan page first instead of dashboard to ensure scan happens
+    if (user) return <Navigate to="/scan" replace />;
     return children;
 }
 
@@ -36,10 +47,18 @@ export default function App() {
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
+                    {/* The root landing page and other marketing pages should always be accessible, even when logged in */}
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/team" element={<TeamPage />} />
+
+                    {/* Only the login page should redirect away if the user is already authenticated */}
                     <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
 
+                    <Route path="/scan" element={<ProtectedScanRoute><AgentScanPage /></ProtectedScanRoute>} />
+
                     <Route element={<ProtectedLayout />}>
-                        <Route path="/" element={<DashboardPage />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/cves" element={<CVEsPage />} />
                         <Route path="/assets" element={<AssetsPage />} />
                         <Route path="/matching" element={<MatchingPage />} />

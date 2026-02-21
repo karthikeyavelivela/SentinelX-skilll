@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
 import Header from '../components/Header';
-import { Shield, Search, Filter, ExternalLink, AlertTriangle, Clock, Download } from 'lucide-react';
+import { Search, Filter, ShieldAlert, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 
 const SEVERITIES = ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
@@ -31,87 +31,154 @@ export default function CVEsPage() {
             .finally(() => setLoading(false));
     }, [page, severity, search]);
 
-    const getBadge = (sev) => {
-        const map = { CRITICAL: 'badge-critical', HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' };
-        return map[sev] || 'badge-info';
+    const getBadgeClass = (sev) => {
+        if (!sev) return 'bg-slate-100 text-slate-500 border-slate-200';
+        const s = sev.toUpperCase();
+        if (s.includes('CRITICAL')) return 'bg-rose-50 border-rose-200 text-rose-700';
+        if (s.includes('HIGH')) return 'bg-orange-50 border-orange-200 text-orange-700';
+        if (s.includes('MEDIUM')) return 'bg-amber-50 border-amber-200 text-amber-700';
+        return 'bg-emerald-50 border-emerald-200 text-emerald-700';
     };
 
     return (
-        <div>
-            <Header title="Vulnerability Intelligence" subtitle={`${total} CVEs tracked`} />
-            <div className="p-6 space-y-4">
+        <div className="min-h-screen bg-slate-50/50">
+            <Header title="Vulnerability Intelligence" subtitle={`${total.toLocaleString()} CVEs tracked globally`} />
 
-                {/* Filters Bar */}
-                <div className="card flex flex-wrap items-center gap-4">
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+
+                {/* Controls Bar */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="relative w-full md:w-96">
+                        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
-                            type="text" placeholder="Search CVE ID, vendor, description..."
+                            type="text" placeholder="Search by CVE ID, vendor, or keywords..."
                             value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-surface-dark border border-surface-border rounded-lg text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-brand-500"
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Filter className="w-4 h-4 text-gray-500" />
-                        {SEVERITIES.map(s => (
-                            <button
-                                key={s}
-                                onClick={() => { setSeverity(s); setPage(1); }}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${severity === s
-                                    ? 'bg-brand-600/20 text-brand-400 border-brand-500/40'
-                                    : 'text-gray-500 border-surface-border hover:text-gray-300 hover:border-gray-600'
-                                    }`}
-                            >
-                                {s}
-                            </button>
-                        ))}
+
+                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+                        <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                            <Filter className="w-4 h-4 text-slate-400 ml-2" />
+                            {SEVERITIES.map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => { setSeverity(s); setPage(1); }}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${severity === s
+                                        ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50'
+                                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                                        }`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="card overflow-hidden p-0">
+                {/* Data Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="w-full text-sm text-left">
                             <thead>
-                                <tr className="text-xs text-gray-500 uppercase tracking-wider bg-surface-dark">
-                                    <th className="px-6 py-3 text-left">CVE ID</th>
-                                    <th className="px-6 py-3 text-left">Description</th>
-                                    <th className="px-6 py-3 text-left">Vendor</th>
-                                    <th className="px-6 py-3 text-center">CVSS</th>
-                                    <th className="px-6 py-3 text-center">EPSS</th>
-                                    <th className="px-6 py-3 text-center">Severity</th>
-                                    <th className="px-6 py-3 text-center">Flags</th>
-                                    <th className="px-6 py-3 text-center">Published</th>
+                                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-medium">
+                                    <th className="px-6 py-4 rounded-tl-2xl">Vulnerability</th>
+                                    <th className="px-6 py-4">Context</th>
+                                    <th className="px-6 py-4">Scores</th>
+                                    <th className="px-6 py-4 text-center">Threat Intel</th>
+                                    <th className="px-6 py-4 text-right rounded-tr-2xl">Published</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-slate-100">
                                 {loading ? (
-                                    <tr><td colSpan={8} className="text-center py-12 text-gray-500">Loading vulnerabilities...</td></tr>
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-16 text-center">
+                                            <div className="flex flex-col items-center justify-center text-slate-400">
+                                                <Activity className="w-8 h-8 mb-3 animate-pulse text-blue-500" />
+                                                <p>Fetching intelligence data...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 ) : cves.length === 0 ? (
-                                    <tr><td colSpan={8} className="text-center py-12 text-gray-500">No CVEs found</td></tr>
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+                                            <ShieldAlert className="w-8 h-8 mx-auto mb-3 text-slate-300" />
+                                            <p>No vulnerabilities found matching your criteria.</p>
+                                        </td>
+                                    </tr>
                                 ) : (
                                     cves.map((cve) => (
-                                        <tr key={cve.cve_id} className="border-t border-surface-border/50 hover:bg-surface-hover/30 transition-colors cursor-pointer">
-                                            <td className="px-6 py-4 font-mono text-brand-400 font-medium whitespace-nowrap">{cve.cve_id}</td>
-                                            <td className="px-6 py-4 text-gray-300 max-w-md truncate">{cve.description}</td>
-                                            <td className="px-6 py-4 text-gray-400 whitespace-nowrap">{cve.vendor || '—'}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`font-mono font-bold ${cve.cvss_v3_score >= 9 ? 'text-red-400' : cve.cvss_v3_score >= 7 ? 'text-orange-400' : cve.cvss_v3_score >= 4 ? 'text-amber-400' : 'text-green-400'}`}>
-                                                    {cve.cvss_v3_score?.toFixed(1) || '—'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center font-mono text-gray-300">{cve.epss_score ? `${(cve.epss_score * 100).toFixed(1)}%` : '—'}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`badge ${getBadge(cve.cvss_v3_severity)}`}>{cve.cvss_v3_severity || '—'}</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <div className="flex items-center justify-center gap-1.5">
-                                                    {cve.is_kev && <span className="badge badge-critical">KEV</span>}
-                                                    {cve.has_public_exploit && <span className="badge badge-high">EXPLOIT</span>}
+                                        <tr key={cve.cve_id} className="hover:bg-slate-50/50 transition-colors group">
+                                            {/* Vulnerability ID & Severity */}
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col gap-1.5 align-start">
+                                                    <span className="font-mono font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
+                                                        {cve.cve_id}
+                                                    </span>
+                                                    <span className={`w-fit px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getBadgeClass(cve.cvss_v3_severity)}`}>
+                                                        {cve.cvss_v3_severity || 'UNKNOWN'}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-center text-gray-500 whitespace-nowrap text-xs">
-                                                {cve.published_date ? new Date(cve.published_date).toLocaleDateString() : '—'}
+
+                                            {/* Context */}
+                                            <td className="px-6 py-4 max-w-md">
+                                                <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
+                                                    {cve.description}
+                                                </p>
+                                                {cve.vendor && (
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Vendor</span>
+                                                        <span className="text-xs text-slate-600 font-medium px-2 py-0.5 bg-slate-100 rounded-md">
+                                                            {cve.vendor}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </td>
+
+                                            {/* Scores */}
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div>
+                                                        <p className="text-[10px] font-semibold text-slate-400 mb-0.5 uppercase">CVSS</p>
+                                                        <p className={`font-mono font-bold ${cve.cvss_v3_score >= 9 ? 'text-rose-600' : cve.cvss_v3_score >= 7 ? 'text-orange-500' : 'text-slate-600'}`}>
+                                                            {cve.cvss_v3_score?.toFixed(1) || '—'}
+                                                        </p>
+                                                    </div>
+                                                    <div className="h-8 w-px bg-slate-200"></div>
+                                                    <div>
+                                                        <p className="text-[10px] font-semibold text-slate-400 mb-0.5 uppercase">EPSS</p>
+                                                        <p className="font-mono font-medium text-slate-600">
+                                                            {cve.epss_score ? `${(cve.epss_score * 100).toFixed(1)}%` : '—'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {/* Threat Intel Flags */}
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex flex-wrap justify-center gap-1.5">
+                                                    {cve.is_kev && (
+                                                        <span className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded-md text-[10px] font-bold tracking-wide">
+                                                            CISA KEV
+                                                        </span>
+                                                    )}
+                                                    {cve.has_public_exploit && (
+                                                        <span className="px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded-md text-[10px] font-bold tracking-wide">
+                                                            EXPLOIT
+                                                        </span>
+                                                    )}
+                                                    {!cve.is_kev && !cve.has_public_exploit && (
+                                                        <span className="text-slate-300 text-xs">—</span>
+                                                    )}
+                                                </div>
+                                            </td>
+
+                                            {/* Published */}
+                                            <td className="px-6 py-4 text-right">
+                                                <span className="text-xs text-slate-500 font-medium bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                                                    {cve.published_date ? new Date(cve.published_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown'}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))
@@ -121,14 +188,24 @@ export default function CVEsPage() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between px-6 py-3 bg-surface-dark border-t border-surface-border">
-                        <p className="text-xs text-gray-500">{total} total CVEs</p>
+                    <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+                        <p className="text-sm font-medium text-slate-500">
+                            Showing <span className="text-slate-700">{Math.min((page - 1) * 25 + 1, total)}</span> to <span className="text-slate-700">{Math.min(page * 25, total)}</span> of <span className="text-slate-700">{total.toLocaleString()}</span> entries
+                        </p>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                                className="px-3 py-1 text-xs bg-surface-card border border-surface-border rounded text-gray-400 hover:text-white disabled:opacity-30">Prev</button>
-                            <span className="text-xs text-gray-400">Page {page}</span>
-                            <button onClick={() => setPage(p => p + 1)} disabled={cves.length < 25}
-                                className="px-3 py-1 text-xs bg-surface-card border border-surface-border rounded text-gray-400 hover:text-white disabled:opacity-30">Next</button>
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-blue-600 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-slate-600 transition-colors shadow-sm"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-sm font-medium text-slate-600 px-2 w-20 text-center">Page {page}</span>
+                            <button
+                                onClick={() => setPage(p => p + 1)} disabled={cves.length < 25}
+                                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-blue-600 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-slate-600 transition-colors shadow-sm"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>

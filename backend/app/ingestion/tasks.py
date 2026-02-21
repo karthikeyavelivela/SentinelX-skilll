@@ -10,17 +10,44 @@ from app.ingestion.connectors.epss import EPSSConnector
 from app.ingestion.connectors.exploitdb import ExploitDBConnector
 from app.ingestion.normalizer import normalize_cve_data, parse_datetime
 import asyncio
+import threading
+import logging
 
 logger = logging.getLogger("vulnguard.ingestion.tasks")
 
-
 def run_async(coro):
     """Helper to run async functions in sync Celery tasks."""
-    loop = asyncio.new_event_loop()
     try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        result = None
+        error = None
+        def target():
+            nonlocal result, error
+            new_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(new_loop)
+            try:
+                result = new_loop.run_until_complete(coro)
+            except Exception as e:
+                error = e
+            finally:
+                new_loop.close()
+                
+        t = threading.Thread(target=target)
+        t.start()
+        t.join()
+        if error:
+            raise error
+        return result
+    else:
+        new_loop = asyncio.new_event_loop()
+        try:
+            return new_loop.run_until_complete(coro)
+        finally:
+            new_loop.close()
 
 
 @celery.task(name="app.ingestion.tasks.ingest_nvd_cves", bind=True, max_retries=3)

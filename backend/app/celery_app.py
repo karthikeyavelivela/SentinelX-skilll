@@ -23,6 +23,8 @@ celery.conf.update(
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
+    task_always_eager=True,  # Added to bypass Redis for local execution
+    task_eager_propagates=True,
 )
 
 # ── Scheduled Tasks ──

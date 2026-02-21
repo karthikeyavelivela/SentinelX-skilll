@@ -43,6 +43,7 @@ export default function MatchingPage() {
                                 <th className="px-6 py-3 text-center">Confidence</th>
                                 <th className="px-6 py-3 text-center">Status</th>
                                 <th className="px-6 py-3 text-center">Matched</th>
+                                <th className="px-6 py-3 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,6 +64,29 @@ export default function MatchingPage() {
                                         <span className={`badge ${m.status === 'open' ? 'badge-high' : m.status === 'remediated' ? 'badge-low' : 'badge-info'}`}>{m.status}</span>
                                     </td>
                                     <td className="px-6 py-3 text-center text-gray-500 text-xs">{m.matched_at ? new Date(m.matched_at).toLocaleString() : '—'}</td>
+                                    <td className="px-6 py-3 text-center">
+                                        {m.status === 'open' && (
+                                            <button
+                                                onClick={() => {
+                                                    const pkgName = m.software_name?.split(' ')[0] || m.cve_id;
+                                                    api.post('/remediation/jobs', {
+                                                        asset_id: m.asset_id,
+                                                        cve_id: m.cve_id,
+                                                        patch_type: 'update',
+                                                        package_name: pkgName,
+                                                        current_version: m.software_name?.split(' ')[1] || '0.0.0',
+                                                        target_version: 'latest',
+                                                        is_dry_run: false,
+                                                        change_description: `Automated patch for ${m.cve_id}`
+                                                    }).then(() => alert(`Patch job created for ${m.cve_id}`))
+                                                        .catch(err => alert(`Failed to create patch: ${err.message}`));
+                                                }}
+                                                className="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded transition-colors"
+                                            >
+                                                Create Patch
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
