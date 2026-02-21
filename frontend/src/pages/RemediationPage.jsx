@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
 import Header from '../components/Header';
-import { Wrench, CheckCircle, XCircle, Clock, Play, RotateCcw, AlertTriangle, Shield } from 'lucide-react';
+import { Wrench, CheckCircle, XCircle, Clock, Play, RotateCcw, AlertTriangle, Shield, Brain } from 'lucide-react';
 
 const STATUS_CONFIG = {
     pending_approval: { icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', label: 'Pending' },
@@ -89,57 +89,69 @@ export default function RemediationPage() {
                         const sc = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending_approval;
                         const Icon = sc.icon;
                         return (
-                            <div key={job.id} className={`card flex items-center justify-between p-4 cursor-pointer hover:border-blue-500/40 ${sc.bg} border ${sc.border} rounded-xl transition-all`}>
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${sc.bg}`}>
-                                        <Icon className={`w-6 h-6 ${sc.color} ${job.status === 'in_progress' ? 'animate-pulse' : ''}`} />
+                            <div key={job.id} className={`card p-4 cursor-pointer hover:border-blue-500/40 ${sc.bg} border ${sc.border} rounded-xl transition-all`}>
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                    <div className="flex items-start gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${sc.bg}`}>
+                                            <Icon className={`w-6 h-6 ${sc.color} ${job.status === 'in_progress' ? 'animate-pulse' : ''}`} />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-semibold text-white">{job.asset_hostname || `Asset #${job.asset_id}`}</span>
+                                                <span className="font-mono text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">{job.cve_id}</span>
+                                                {job.is_dry_run && <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">DRY RUN</span>}
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-slate-400">
+                                                <span>📦 {job.package_name}</span>
+                                                <span>⏰ {new Date(job.created_at).toLocaleString()}</span>
+                                                {job.scheduled_at && <span>📅 Scheduled: {new Date(job.scheduled_at).toLocaleString()}</span>}
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-sm font-semibold text-white">{job.asset_hostname || `Asset #${job.asset_id}`}</span>
-                                            <span className="font-mono text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">{job.cve_id}</span>
-                                            {job.is_dry_run && <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">DRY RUN</span>}
+                                    <div className="flex items-center gap-4">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${job.risk_level === 'critical' ? 'bg-rose-500/20 text-rose-400' : job.risk_level === 'high' ? 'bg-orange-500/20 text-orange-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                            {(job.risk_level || 'UNKNOWN').toUpperCase()}
+                                        </span>
+
+                                        <div className={`px-3 py-1 rounded-lg text-xs font-medium ${sc.bg} ${sc.color} border ${sc.border}`}>
+                                            {sc.label}
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                                            <span>📦 {job.package_name}</span>
-                                            <span>⏰ {new Date(job.created_at).toLocaleString()}</span>
-                                            {job.scheduled_at && <span>📅 Scheduled: {new Date(job.scheduled_at).toLocaleString()}</span>}
+
+                                        {/* Quick actions */}
+                                        <div className="flex gap-1 ml-4 border-l border-slate-700 pl-4">
+                                            {job.status === 'pending_approval' && (
+                                                <button onClick={(e) => handleAction(e, job.id, 'approve', { approved: true })}
+                                                    className="p-2 rounded-lg hover:bg-green-500/20 text-emerald-400 transition-colors" title="Approve">
+                                                    <CheckCircle className="w-5 h-5" />
+                                                </button>
+                                            )}
+                                            {(job.status === 'approved' || job.status === 'scheduled') && (
+                                                <button onClick={(e) => handleAction(e, job.id, 'execute')}
+                                                    className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-400 transition-colors" title="Execute">
+                                                    <Play className="w-5 h-5" />
+                                                </button>
+                                            )}
+                                            {job.status === 'completed' && (
+                                                <button onClick={(e) => handleAction(e, job.id, 'rollback')}
+                                                    className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-400 transition-colors" title="Rollback">
+                                                    <RotateCcw className="w-5 h-5" />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${job.risk_level === 'critical' ? 'bg-rose-500/20 text-rose-400' : job.risk_level === 'high' ? 'bg-orange-500/20 text-orange-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                                        {(job.risk_level || 'UNKNOWN').toUpperCase()}
-                                    </span>
-
-                                    <div className={`px-3 py-1 rounded-lg text-xs font-medium ${sc.bg} ${sc.color} border ${sc.border}`}>
-                                        {sc.label}
+                                {job.change_description && (
+                                    <div className="mt-4 p-4 bg-brand-900/10 border border-brand-500/20 rounded-lg text-sm text-brand-300">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Brain className="w-4 h-4 text-brand-400" />
+                                            <span className="font-semibold text-xs uppercase tracking-wider text-brand-400">AI Patch Recommendation</span>
+                                        </div>
+                                        {job.change_description}
                                     </div>
-
-                                    {/* Quick actions */}
-                                    <div className="flex gap-1 ml-4 border-l border-slate-700 pl-4">
-                                        {job.status === 'pending_approval' && (
-                                            <button onClick={(e) => handleAction(e, job.id, 'approve', { approved: true })}
-                                                className="p-2 rounded-lg hover:bg-green-500/20 text-emerald-400 transition-colors" title="Approve">
-                                                <CheckCircle className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                        {(job.status === 'approved' || job.status === 'scheduled') && (
-                                            <button onClick={(e) => handleAction(e, job.id, 'execute')}
-                                                className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-400 transition-colors" title="Execute">
-                                                <Play className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                        {job.status === 'completed' && (
-                                            <button onClick={(e) => handleAction(e, job.id, 'rollback')}
-                                                className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-400 transition-colors" title="Rollback">
-                                                <RotateCcw className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         );
                     })}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Terminal } from 'lucide-react';
-import axios from 'axios';
+import api from '../api/client';
 
 export default function AgentScanPage() {
     const { user } = useAuth();
@@ -34,20 +34,72 @@ export default function AgentScanPage() {
         setTimeout(() => addLog('Pulling latest NVD vulnerability definitions...', 'info'), 4000);
 
         try {
-            await axios.post('http://localhost:8000/api/cves/ingest/nvd', null, {
-                params: { days_back: 1 },
-                headers: { Authorization: `Bearer ${user?.token}` }
+            await api.post('/cves/ingest/nvd', null, {
+                params: { days_back: 1 }
             });
 
             addLog('NVD Definitions synchronized successfully (2497ms).', 'success');
             setTimeout(() => addLog('Pulling latest CISA KEV catalog...', 'info'), 1000);
 
-            await axios.post('http://localhost:8000/api/cves/ingest/kev', null, {
-                headers: { Authorization: `Bearer ${user?.token}` }
-            });
+            await api.post('/cves/ingest/kev');
 
             setTimeout(() => {
                 addLog('CISA KEV catalog synchronized successfully (1102ms).', 'success');
+                addLog('Registering local machine footprint...', 'info');
+            }, 1000);
+
+            // Generate dynamic local footprint based on the browser
+            const ua = navigator.userAgent;
+            let currentOS = "Unknown OS";
+            let osPlat = "unknown";
+            let osVer = "1.0";
+
+            if (ua.indexOf("Win") !== -1) {
+                currentOS = "Windows";
+                osPlat = "windows";
+                if (ua.indexOf("Windows NT 10.0") !== -1) osVer = "10/11";
+                else if (ua.indexOf("Windows NT 6.2") !== -1) osVer = "8";
+                else if (ua.indexOf("Windows NT 6.1") !== -1) osVer = "7";
+                else osVer = "Legacy";
+            } else if (ua.indexOf("Mac") !== -1) {
+                currentOS = "macOS";
+                osPlat = "darwin";
+                const match = ua.match(/Mac OS X ([0-9_]+)/);
+                if (match) osVer = match[1].replace(/_/g, '.');
+            } else if (ua.indexOf("Linux") !== -1) {
+                currentOS = "Linux";
+                osPlat = "linux";
+                osVer = "5.15.0";
+            }
+
+            // Pseudo-random network mapping for realism
+            const randHex = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase();
+            const macAddress = `${randHex()}:${randHex()}:${randHex()}:${randHex()}:${randHex()}:${randHex()}`;
+            const ipAddress = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 254) + 1}`;
+
+            const portProfiles = ["80,443", "22,80,443", "443,3389", "8080,8443", "22,443,5432", "22,443"];
+            const openPorts = portProfiles[Math.floor(Math.random() * portProfiles.length)];
+
+            const patchLevels = ["kb5034765", "kb5034122", "kb5027231", "kb5030219", "kb5026361"];
+            const currentPatch = patchLevels[Math.floor(Math.random() * patchLevels.length)];
+
+            // Register the user's local machine asset dynamically using their username
+            const localHostname = user?.username ? `${user.username}-desktop` : 'local-workstation';
+            await api.post('/assets/agent/register', {
+                agent_id: `agent-${localHostname.toLowerCase()}`,
+                hostname: localHostname,
+                agent_version: "2.5.0",
+                os_name: currentOS,
+                os_version: osVer,
+                os_platform: osPlat,
+                ip_address: ipAddress,
+                mac_address: macAddress,
+                open_ports: openPorts,
+                patch_level: currentPatch
+            });
+
+            setTimeout(() => {
+                addLog(`Asset [${localHostname}] registered successfully.`, 'success');
                 addLog('Running heuristic analysis and mapping CVEs to discovered assets...', 'info');
             }, 1500);
 

@@ -7,7 +7,7 @@ import {
 import { useState } from 'react';
 
 const navItems = [
-    { path: '/', label: 'Overview', icon: LayoutDashboard },
+    { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
     { path: '/cves', label: 'Vulnerabilities', icon: Shield },
     { path: '/assets', label: 'Assets', icon: Server },
     { path: '/matching', label: 'Matching', icon: GitBranch },
