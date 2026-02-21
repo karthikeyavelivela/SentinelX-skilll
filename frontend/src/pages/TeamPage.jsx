@@ -4,9 +4,9 @@ import Footer from '../components/Footer';
 import { Github, Linkedin, Twitter } from 'lucide-react';
 
 const team = [
-    { name: 'Karthikeya Velivea', role: 'Lead Architect', color: 'bg-[#FF6B6B]' },
-    { name: 'Ramya Sri Kodali', role: 'Security Analyst', color: 'bg-[#4ECDC4]' },
-    { name: 'Chevuru Jhanavi', role: 'Backend Engineer', color: 'bg-[#FFE66D]' },
+    { name: 'Karthikeya Velivela', role: 'Lead Architect', color: 'bg-[#FF6B6B]', image: 'https://res.cloudinary.com/dzxuomajo/image/upload/v1771669050/ce9b3c4f-77de-44e8-91ed-5f6f578848ae_anhn5m.jpg' },
+    { name: 'Ramya Sri Kodali', role: 'Security Analyst', color: 'bg-[#4ECDC4]', image: 'https://res.cloudinary.com/dzxuomajo/image/upload/v1771668935/58dd9bd8-411a-4764-9dcf-217f631ff16d_zz4qbr.jpg' },
+    { name: 'Chevuru Jhanavi', role: 'Backend Engineer', color: 'bg-[#FFE66D]', image: 'https://res.cloudinary.com/dzxuomajo/image/upload/v1771668933/417135f8-31d2-4488-a2ae-bc0e061acceb_kni7pd.jpg' },
     { name: 'Sura Vinay', role: 'Frontend Developer', color: 'bg-[#A8E6CF]' }
 ];
 
@@ -32,7 +32,7 @@ export default function TeamPage() {
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-4xl font-black uppercase tracking-tight">{member.name}</h3>
                                 <div className="w-16 h-16 rounded-full border-4 border-black bg-white flex items-center justify-center overflow-hidden">
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`} alt={member.name} className="w-full h-full object-cover" />
+                                    <img src={member.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`} alt={member.name} className="w-full h-full object-cover" />
                                 </div>
                             </div>
 
