@@ -72,8 +72,8 @@ async def asset_risk_detail(
             score = risk_engine.calculate_risk(
                 exploit_probability=cve.predicted_exploit_probability or cve.epss_score or 0,
                 cvss_score=cve.cvss_v3_score or 0,
-                asset_criticality=asset.criticality.value if asset.criticality else "medium",
-                network_zone=asset.network_zone.value if asset.network_zone else "internal",
+                asset_criticality=(asset.criticality.value if hasattr(asset.criticality, 'value') else asset.criticality) if asset.criticality else "medium",
+                network_zone=(asset.network_zone.value if hasattr(asset.network_zone, 'value') else asset.network_zone) if asset.network_zone else "internal",
                 is_internet_facing=asset.is_internet_facing,
                 business_unit=asset.business_unit or "unassigned",
                 vulnerability_count=len(match_list),
@@ -149,8 +149,8 @@ async def calculate_all_risks(
             result = risk_engine.calculate_risk(
                 exploit_probability=cve.predicted_exploit_probability or cve.epss_score or 0,
                 cvss_score=cve.cvss_v3_score or 0,
-                asset_criticality=asset.criticality.value if asset.criticality else "medium",
-                network_zone=asset.network_zone.value if asset.network_zone else "internal",
+                asset_criticality=(asset.criticality.value if hasattr(asset.criticality, 'value') else asset.criticality) if asset.criticality else "medium",
+                network_zone=(asset.network_zone.value if hasattr(asset.network_zone, 'value') else asset.network_zone) if asset.network_zone else "internal",
                 is_internet_facing=asset.is_internet_facing,
                 business_unit=asset.business_unit or "unassigned",
                 vulnerability_count=len(matches),

@@ -28,33 +28,8 @@ export default function MLPage() {
             api.get('/ml/model/metrics').catch(() => ({ data: {} })),
         ]).then(([predRes, metRes]) => {
 
-            // Mock Data Fallbacks if backend DB is empty
-            const pData = predRes.data?.length > 0 ? predRes.data : [
-                { cve_id: "CVE-2024-3094", exploit_probability: 0.94, risk_level: "CRITICAL", key_factors: ["In the wild", "Remote Code Execution"] },
-                { cve_id: "CVE-2023-4863", exploit_probability: 0.88, risk_level: "HIGH", key_factors: ["Public Exploit", "Browser Engine"] },
-                { cve_id: "CVE-2023-38831", exploit_probability: 0.82, risk_level: "HIGH", key_factors: ["High EPSS", "Privilege Escalation"] },
-                { cve_id: "CVE-2023-24489", exploit_probability: 0.75, risk_level: "HIGH", key_factors: ["Citrix ShareFile", "CISA KEV"] },
-                { cve_id: "CVE-2023-20198", exploit_probability: 0.61, risk_level: "MEDIUM", key_factors: ["Cisco IOS XE", "Authentication Bypass"] }
-            ];
-
-            const mData = metRes.data && metRes.data.feature_importance ? metRes.data : {
-                roc_auc: 0.9412,
-                precision: 0.8955,
-                recall: 0.9120,
-                f1: 0.9036,
-                model_type: "xgboost",
-                feature_importance: {
-                    "cvss_v3_score": 0.34,
-                    "epss_score": 0.28,
-                    "is_kev": 0.18,
-                    "has_public_exploit": 0.12,
-                    "attack_vector_network": 0.08,
-                    "privileges_required_none": 0.05
-                }
-            };
-
-            setPredictions(pData);
-            setMetrics(mData);
+            setPredictions(predRes.data || []);
+            setMetrics(metRes.data || {});
         }).finally(() => setLoading(false));
     }, []);
 

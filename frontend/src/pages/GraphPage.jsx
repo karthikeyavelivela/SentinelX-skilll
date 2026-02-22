@@ -24,35 +24,10 @@ export default function GraphPage() {
             if (data && data.nodes && data.nodes.length > 0) {
                 setGraphData(data);
             } else {
-                setGraphData({
-                    nodes: [
-                        { id: 1, type: "Asset", properties: { hostname: "db-prod", criticality: "critical" } },
-                        { id: 2, type: "Asset", properties: { hostname: "api-gw", criticality: "high" } },
-                        { id: 3, type: "Asset", properties: { hostname: "web-fe-1", criticality: "medium" } },
-                        { id: 4, type: "Asset", properties: { hostname: "web-fe-2", criticality: "medium" } },
-                        { id: 5, type: "Vulnerability", properties: { cve_id: "CVE-2024-3094", level: "critical" } },
-                        { id: 6, type: "Vulnerability", properties: { cve_id: "CVE-2023-4863", level: "high" } },
-                        { id: 7, type: "NetworkZone", properties: { name: "DMZ" } },
-                        { id: 8, type: "NetworkZone", properties: { name: "Internal" } },
-                        { id: 9, type: "Privilege", properties: { name: "root" } }
-                    ],
-                    edges: [
-                        { source: 3, target: 7, relationship: "IN_ZONE" },
-                        { source: 4, target: 7, relationship: "IN_ZONE" },
-                        { source: 1, target: 8, relationship: "IN_ZONE" },
-                        { source: 2, target: 8, relationship: "IN_ZONE" },
-                        { source: 3, target: 2, relationship: "CONNECTS_TO" },
-                        { source: 4, target: 2, relationship: "CONNECTS_TO" },
-                        { source: 2, target: 1, relationship: "CONNECTS_TO" },
-                        { source: 3, target: 5, relationship: "AFFECTED_BY" },
-                        { source: 4, target: 5, relationship: "AFFECTED_BY" },
-                        { source: 2, target: 6, relationship: "AFFECTED_BY" },
-                        { source: 5, target: 9, relationship: "GRANTS" }
-                    ]
-                });
+                setGraphData({ nodes: [], edges: [] });
             }
         }).catch(() => {
-            setGraphData(null);
+            setGraphData({ nodes: [], edges: [] });
         });
     }, []);
 
@@ -207,7 +182,7 @@ export default function GraphPage() {
                     if (n.type === 'Vulnerability' && n.properties?.cve_id) {
                         api.get(`/graph/blast-radius/${n.properties.cve_id}`)
                             .then(r => setBlastRadius(r.data))
-                            .catch(() => setBlastRadius({ cve_id: n.properties.cve_id, directly_affected_assets: 3, indirectly_reachable_assets: 8, severity: 'high' }));
+                            .catch(() => setBlastRadius(null));
                     }
                     return;
                 }

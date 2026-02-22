@@ -36,8 +36,9 @@ async def _rebuild_graph():
         assets = [
             {
                 "id": a.id, "hostname": a.hostname, "ip_address": a.ip_address,
-                "os_platform": a.os_platform, "criticality": a.criticality.value if a.criticality else "medium",
-                "network_zone": a.network_zone.value if a.network_zone else "internal",
+                "os_platform": a.os_platform, 
+                "criticality": (a.criticality.value if hasattr(a.criticality, 'value') else a.criticality) if a.criticality else "medium",
+                "network_zone": (a.network_zone.value if hasattr(a.network_zone, 'value') else a.network_zone) if a.network_zone else "internal",
                 "is_internet_facing": a.is_internet_facing, "risk_score": a.risk_score or 0,
                 "business_unit": a.business_unit or "unassigned",
             }

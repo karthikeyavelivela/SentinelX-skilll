@@ -53,7 +53,7 @@ async def get_match_results(
 @router.post("/trigger")
 async def trigger_matching(
     asset_id: Optional[int] = None,
-    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.ANALYST)),
+    current_user: User = Depends(get_current_user),
 ):
     task = run_matching.delay(asset_id=asset_id)
     return {"status": "queued", "task_id": task.id}

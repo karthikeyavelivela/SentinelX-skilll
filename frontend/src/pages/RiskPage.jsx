@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
 import Header from '../components/Header';
-import { Zap, TrendingDown, AlertTriangle, Building2 } from 'lucide-react';
+import { Zap, TrendingDown, AlertTriangle, Building2, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
 const HeatCell = ({ value, max }) => {
@@ -22,37 +22,32 @@ const HeatCell = ({ value, max }) => {
 export default function RiskPage() {
     const [heatmap, setHeatmap] = useState([]);
     const [topRisks, setTopRisks] = useState([]);
+    const [calculating, setCalculating] = useState(false);
 
-    useEffect(() => {
+    const fetchData = () => {
         Promise.all([
             api.get('/risk/heatmap').catch(() => ({ data: [] })),
             api.get('/risk/scores?limit=20').catch(() => ({ data: [] }))
         ]).then(([heatRes, scoreRes]) => {
-            const hData = heatRes.data?.length > 0 ? heatRes.data : [
-                { business_unit: "engineering", total_assets: 142, critical: 12, high: 28, medium: 45, low: 57 },
-                { business_unit: "sales", total_assets: 85, critical: 2, high: 14, medium: 30, low: 39 },
-                { business_unit: "marketing", total_assets: 45, critical: 0, high: 5, medium: 12, low: 28 },
-                { business_unit: "finance", total_assets: 34, critical: 4, high: 8, medium: 15, low: 7 },
-                { business_unit: "hr", total_assets: 28, critical: 1, high: 3, medium: 10, low: 14 }
-            ];
-
-            const sData = scoreRes.data?.length > 0 ? scoreRes.data : [
-                { asset_id: 101, hostname: "db-prod-aws-east", risk_score: 95, risk_level: "CRITICAL", cve_count: 14 },
-                { asset_id: 145, hostname: "core-router-01", risk_score: 88, risk_level: "HIGH", cve_count: 8 },
-                { asset_id: 204, hostname: "api-gateway-v2", risk_score: 82, risk_level: "HIGH", cve_count: 11 },
-                { asset_id: 45, hostname: "eng-build-server", risk_score: 75, risk_level: "HIGH", cve_count: 22 },
-                { asset_id: 99, hostname: "vpn-endpoint-nyc", risk_score: 68, risk_level: "HIGH", cve_count: 5 },
-                { asset_id: 112, hostname: "sales-crm-db", risk_score: 64, risk_level: "HIGH", cve_count: 9 },
-                { asset_id: 88, hostname: "auth-service-02", risk_score: 55, risk_level: "MEDIUM", cve_count: 3 },
-                { asset_id: 12, hostname: "internal-wiki", risk_score: 42, risk_level: "MEDIUM", cve_count: 7 },
-            ];
-
-            setHeatmap(hData);
-            setTopRisks(sData);
+            setHeatmap(heatRes.data || []);
+            setTopRisks(scoreRes.data || []);
         });
+    };
+
+    useEffect(() => {
+        fetchData();
     }, []);
 
-    const display = heatmap;
+    const calculateRisk = () => {
+        setCalculating(true);
+        api.get('/risk/calculate').then(() => {
+            fetchData();
+        }).finally(() => {
+            setTimeout(() => setCalculating(false), 2000);
+        });
+    };
+
+    const display = heatmap || [];
     const risks = topRisks;
     const maxVal = Math.max(...display.flatMap(d => [d.critical, d.high, d.medium, d.low]), 1);
 
@@ -62,6 +57,13 @@ export default function RiskPage() {
         <div>
             <Header title="Risk Scoring" subtitle="Composite risk analysis across all assets" />
             <div className="p-6 space-y-6">
+                <div className="flex justify-end">
+                    <button onClick={calculateRisk} disabled={calculating}
+                        className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-500 disabled:opacity-50 transition-all">
+                        <RefreshCw className={`w-4 h-4 ${calculating ? 'animate-spin' : ''}`} />
+                        {calculating ? 'Calculating...' : 'Calculate Risk Scores'}
+                    </button>
+                </div>
 
                 {/* Top risks bar chart */}
                 <div className="card">
@@ -122,10 +124,10 @@ export default function RiskPage() {
                         <AlertTriangle className="w-4 h-4 text-amber-400" /> Highest Risk Assets
                     </h3>
                     <div className="space-y-2">
-                        {risks.map(r => {
+                        {risks.map((r, idx) => {
                             const color = r.risk_score >= 80 ? '#ff4444' : r.risk_score >= 60 ? '#ff8844' : r.risk_score >= 40 ? '#ffbb33' : '#00ff88';
                             return (
-                                <div key={r.asset_id} className="flex items-center gap-4 p-3 bg-surface-dark rounded-lg border border-surface-border">
+                                <div key={r.id || idx} className="flex items-center gap-4 p-3 bg-surface-dark rounded-lg border border-surface-border">
                                     <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg" style={{ backgroundColor: color + '20', color }}>
                                         {r.risk_score}
                                     </div>

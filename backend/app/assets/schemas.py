@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, field_validator
+from typing import Optional, List, Any
 from datetime import datetime
+import json
 from app.assets.models import AssetCriticality, NetworkZoneType
 
 
@@ -60,6 +61,29 @@ class AssetResponse(BaseModel):
     vulnerability_count: int
     tags: list
     created_at: Optional[datetime]
+
+    @field_validator("open_ports", "tags", mode="before")
+    def parse_json_lists(cls, v: Any) -> list:
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                return []
+        if v is None:
+            return []
+        return v
+
+    @field_validator("criticality", "network_zone", mode="before")
+    def parse_enums(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.lower()
+        return v
+
+    @field_validator("vulnerability_count", mode="before")
+    def parse_vulnerability_count(cls, v: Any) -> int:
+        if v is None:
+            return 0
+        return v
 
     class Config:
         from_attributes = True

@@ -43,10 +43,12 @@ async def get_current_user(
 
 def require_role(*roles: UserRole):
     async def role_checker(current_user: User = Depends(get_current_user)):
-        if current_user.role not in roles:
+        user_role_val = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+        allowed_roles = [r.value if hasattr(r, 'value') else r for r in roles]
+        if str(user_role_val).lower() not in [str(r).lower() for r in allowed_roles]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{current_user.role}' not authorized. Required: {[r.value for r in roles]}",
+                detail=f"Role '{user_role_val}' not authorized. Required: {allowed_roles}",
             )
         return current_user
     return role_checker

@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, field_validator
+from typing import Optional, List, Any
 from datetime import datetime
 from app.remediation.models import PatchStatus
 
@@ -21,9 +21,9 @@ class PatchJobResponse(BaseModel):
     id: int
     asset_id: int
     cve_id: str
-    patch_type: str
+    patch_type: Optional[str]
     platform: Optional[str]
-    package_name: str
+    package_name: Optional[str]
     current_version: Optional[str]
     target_version: Optional[str]
     status: PatchStatus
@@ -36,6 +36,18 @@ class PatchJobResponse(BaseModel):
     scheduled_at: Optional[datetime]
     created_at: Optional[datetime]
     completed_at: Optional[datetime]
+
+    @field_validator("is_dry_run", mode="before")
+    def parse_is_dry_run(cls, v):
+        if v is None:
+            return True
+        return v
+
+    @field_validator("status", mode="before")
+    def parse_status(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        return v
 
     class Config:
         from_attributes = True

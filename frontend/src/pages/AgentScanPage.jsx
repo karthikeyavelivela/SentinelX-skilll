@@ -78,7 +78,8 @@ export default function AgentScanPage() {
             const ipAddress = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 254) + 1}`;
 
             const portProfiles = ["80,443", "22,80,443", "443,3389", "8080,8443", "22,443,5432", "22,443"];
-            const openPorts = portProfiles[Math.floor(Math.random() * portProfiles.length)];
+            const openPortsStr = portProfiles[Math.floor(Math.random() * portProfiles.length)];
+            const openPortsList = openPortsStr.split(',').map(p => parseInt(p.trim(), 10));
 
             const patchLevels = ["kb5034765", "kb5034122", "kb5027231", "kb5030219", "kb5026361"];
             const currentPatch = patchLevels[Math.floor(Math.random() * patchLevels.length)];
@@ -94,7 +95,7 @@ export default function AgentScanPage() {
                 os_platform: osPlat,
                 ip_address: ipAddress,
                 mac_address: macAddress,
-                open_ports: openPorts,
+                open_ports: openPortsList,
                 patch_level: currentPatch
             });
 

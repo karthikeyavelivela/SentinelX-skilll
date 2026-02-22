@@ -44,7 +44,7 @@ function PublicRoute({ children }) {
 
 export default function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
             <AuthProvider>
                 <Routes>
                     {/* The root landing page and other marketing pages should always be accessible, even when logged in */}

@@ -31,7 +31,7 @@ class PatchJob(Base):
     target_version = Column(String(100))
     
     # Status
-    status = Column(SAEnum(PatchStatus), default=PatchStatus.PENDING_APPROVAL)
+    status = Column(String(50), default=PatchStatus.PENDING_APPROVAL.value)
     is_dry_run = Column(Boolean, default=True)
     
     # Execution

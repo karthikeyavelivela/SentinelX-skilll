@@ -32,8 +32,8 @@ class Asset(Base):
     
     # Classification
     asset_type = Column(String(50))  # server, workstation, network_device, container
-    criticality = Column(SAEnum(AssetCriticality), default=AssetCriticality.MEDIUM)
-    network_zone = Column(SAEnum(NetworkZoneType), default=NetworkZoneType.INTERNAL)
+    criticality = Column(String(50), default=AssetCriticality.MEDIUM.value)
+    network_zone = Column(String(50), default=NetworkZoneType.INTERNAL.value)
     business_unit = Column(String(100))
     owner = Column(String(255))
     

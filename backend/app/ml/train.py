@@ -166,12 +166,12 @@ class ExploitPredictor:
             score += 0.25
             factors.append("Public exploit available")
         
-        epss = float(cve_data.get("epss_score", 0))
+        epss = float(cve_data.get("epss_score") or 0.0)
         score += epss * 0.2
         if epss > 0.5:
             factors.append(f"High EPSS ({epss:.2f})")
         
-        cvss = float(cve_data.get("cvss_v3_score", 0))
+        cvss = float(cve_data.get("cvss_v3_score") or 0.0)
         score += (cvss / 10) * 0.15
         if cvss >= 9.0:
             factors.append(f"Critical CVSS ({cvss})")

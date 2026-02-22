@@ -42,8 +42,9 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account disabled")
 
-    token = create_access_token(data={"sub": user.id, "role": user.role.value})
-    return Token(access_token=token, role=user.role.value, username=user.username)
+    role_val = user.role.value if hasattr(user.role, 'value') else user.role
+    token = create_access_token(data={"sub": user.id, "role": role_val})
+    return Token(access_token=token, role=role_val, username=user.username)
 
 
 @router.get("/me", response_model=UserResponse)
